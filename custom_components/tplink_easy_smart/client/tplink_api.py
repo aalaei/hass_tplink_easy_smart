@@ -245,17 +245,11 @@ class TpLinkApi:
 
     async def get_led_state(self) -> bool:
         """Return the LED state."""
-        data = await self._core_api.get_variables(
-            URL_LED_SETTINGS_GET,
-            [
-                ("tip", VariableType.Str),
-                ("led", VariableType.Int),
-            ],
+        data = await self._core_api.get_variable(
+            URL_LED_SETTINGS_GET, "led", VariableType.Str
         )
 
-        result: list[PortState] = []
-
-        return data.get("led")
+        return bool(int(data[0]))
     async def set_port_state(
         self,
         number: int,

@@ -90,11 +90,9 @@ class TpLinkDataUpdateCoordinator(DataUpdateCoordinator):
             return None
         return self._port_states[number - 1]
 
-    def get_led_state(self, number: int) -> bool | None:
-        """Return the specified port led state."""
-        if number > self.ports_count or number < 1:
-            return None
-        return self._led_states[number - 1]
+    def get_led_state(self) -> bool | None:
+        """Return the led state."""
+        return self._led_state
 
     def get_port_poe_state(self, number: int) -> PortPoeState | None:
         """Return the specified port PoE state."""
@@ -126,7 +124,7 @@ class TpLinkDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("Update started")
         await self._update_switch_info()
         await self._update_port_states()
-        await self._update_led_states()
+        await self._update_led_state()
         await self._update_poe_state()
         await self._update_port_poe_states()
         _LOGGER.debug("Update completed")
@@ -147,14 +145,13 @@ class TpLinkDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Can not get port states: %s", repr(ex))
             self._port_states = []
     
-    async def _update_led_states(self):
+    async def _update_led_state(self):
         """Update led states."""
         try:
-            status= await self._api.get_led_state()
-            self._led_states = [status for _ in range(self.ports_count)]
+            self._led_state= await self._api.get_led_state()
         except Exception as ex:
             _LOGGER.warning("Can not get led states: %s", repr(ex))
-            self._led_states = []
+            self._led_state = None
 
     async def _update_poe_state(self):
         """Update the switch PoE state."""
@@ -215,12 +212,11 @@ class TpLinkDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def set_led_state(
         self,
-        number: int,
         enabled: bool
     ) -> None:
         """Set the port led state."""
-        await self._api.set_led_state(number, enabled)
-        self._port_states = [enabled for _ in range(self.ports_count)]
+        await self._api.set_led_state(enabled)
+        self._led_state = enabled
         self.async_update_listeners()
 
     async def async_set_poe_limit(self, limit: float) -> None:
