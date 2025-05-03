@@ -265,7 +265,7 @@ class TpLinkPortLEDSwitch(TpLinkSwitch):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_is_on = self.coordinator.get_led_state(self._port_number)
+        self._attr_is_on = self.coordinator.get_led_state()
         super()._handle_coordinator_update()
 
 # ---------------------------
