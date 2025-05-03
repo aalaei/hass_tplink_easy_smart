@@ -22,6 +22,8 @@ from .const import (
     URL_POE_SETTINGS_SET,
     URL_PORT_SETTINGS_SET,
     URL_PORTS_SETTINGS_GET,
+    URL_LED_SETTINGS_GET,
+    URL_LED_SETTINGS_SET
 )
 from .coreapi import TpLinkWebApi, VariableType
 from .utils import TpLinkFeaturesDetector
@@ -241,6 +243,19 @@ class TpLinkApi:
             power_consumption=poe_config.get("system_power_consumption", 0) / 10,
         )
 
+    async def get_led_state(self) -> bool:
+        """Return the LED state."""
+        data = await self._core_api.get_variables(
+            URL_LED_SETTINGS_GET,
+            [
+                ("tip", VariableType.Str),
+                ("led", VariableType.Int),
+            ],
+        )
+
+        result: list[PortState] = []
+
+        return data.get("led")
     async def set_port_state(
         self,
         number: int,
@@ -284,6 +299,17 @@ class TpLinkApi:
         }
         result = await self._core_api.post(URL_POE_SETTINGS_SET, data)
         _LOGGER.debug("POE_SET_RESULT: %s", result)
+
+    async def set_led_state(
+        self,
+        enabled: bool,
+    ) -> None:
+        """Change port state."""
+        query: str = (
+            f"rd_led={1 if enabled else 0}&"
+            f"led_cfg=Apply"
+        )
+        await self._core_api.get(URL_LED_SETTINGS_SET, query=query)
 
     async def set_port_poe_settings(
         self,

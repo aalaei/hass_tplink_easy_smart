@@ -3,8 +3,10 @@ from typing import Final
 URL_DEVICE_INFO: Final = "SystemInfoRpm.htm"
 URL_PORTS_SETTINGS_GET: Final = "PortSettingRpm.htm"
 URL_POE_SETTINGS_GET: Final = "PoeConfigRpm.htm"
+URL_LED_SETTINGS_GET: Final = "TurnOnLEDRpm.htm"
 
 URL_PORT_SETTINGS_SET: Final = "port_setting.cgi"
+URL_LED_SETTINGS_SET: Final = "led_on_set.cgi"
 URL_POE_SETTINGS_SET: Final = "poe_global_config.cgi"
 URL_POE_PORT_SETTINGS_SET: Final = "poe_port_config.cgi"
 

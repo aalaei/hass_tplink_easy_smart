@@ -31,7 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _FUNCTION_DISPLAYED_NAME_PORT_STATE_FORMAT: Final = "Port {} enabled"
+_FUNCTION_DISPLAYED_NAME_PORT_LED_STATE_FORMAT: Final = "Port {} led enabled"
 _FUNCTION_UID_PORT_STATE_FORMAT: Final = "port_{}_enabled"
+_FUNCTION_UID_PORT_LED_STATE_FORMAT: Final = "port_{}_led_enabled"
 
 _FUNCTION_DISPLAYED_NAME_PORT_POE_STATE_FORMAT: Final = "Port {} PoE enabled"
 _FUNCTION_UID_PORT_POE_STATE_FORMAT: Final = "port_{}_poe_enabled"
@@ -114,6 +116,23 @@ async def async_setup_entry(
                             port_number
                         ),
                         function_name=_FUNCTION_DISPLAYED_NAME_PORT_POE_STATE_FORMAT.format(
+                            port_number
+                        ),
+                    ),
+                )
+            )
+            sensors.append(
+                TpLinkPortLEDSwitch(
+                    coordinator,
+                    TpLinkPortSwitchEntityDescription(
+                        key=f"port_{port_number}_led_enabled",
+                        icon="mdi:led-on",
+                        port_number=port_number,
+                        device_name=coordinator.get_switch_info().name,
+                        function_uid=_FUNCTION_UID_PORT_LED_STATE_FORMAT.format(
+                            port_number
+                        ),
+                        function_name=_FUNCTION_DISPLAYED_NAME_PORT_LED_STATE_FORMAT.format(
                             port_number
                         ),
                     ),
@@ -220,6 +239,38 @@ class TpLinkPortStateSwitch(TpLinkSwitch):
         await self.coordinator.set_port_state(
             info.number, state, info.speed_config, info.flow_control_config
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._port_info = self.coordinator.get_port_state(self._port_number)
+        self._attr_is_on = self._port_info.enabled if self._port_info else None
+        super()._handle_coordinator_update()
+
+# ---------------------------
+#   TpLinkPortLEDSwitch
+# ---------------------------
+class TpLinkPortLEDSwitch(TpLinkSwitch):
+    entity_description: TpLinkPortSwitchEntityDescription
+
+    def __init__(
+        self,
+        coordinator: TpLinkDataUpdateCoordinator,
+        description: TpLinkPortSwitchEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, description)
+        self._attr_is_on = None
+        self._attr_extra_state_attributes = {}
+        self._port_number = description.port_number
+
+    async def _go_to_state(self, state: bool):
+        info = self._port_info
+        if not info:
+            _LOGGER.warning(
+                "Can not change switch '%s' state: port info not found", self.name
+            )
+            return
+        await self.coordinator.set_led_state(info.number, state)
 
     @callback
     def _handle_coordinator_update(self) -> None:
